@@ -1,4 +1,5 @@
 get '/' do
+  @users = User.all
   # render home page
   #TODO: Show all users if user is signed in
   erb :index
@@ -12,11 +13,18 @@ get '/sessions/new' do
 end
 
 post '/sessions' do
-  # sign-in
+  user = User.find_by_email(params[:email])
+  if user && user.authenticate(params[:password])
+    session[:user_id] = user.id
+    erb :index
+  else
+    @error = "Really sorry. Your shit failed for some reason."
+    erb :sign_in
+  end
 end
 
 delete '/sessions/:id' do
-  # sign-out -- invoked via AJAX
+  session.clear
 end
 
 #----------- USERS -----------
@@ -29,6 +37,7 @@ end
 post '/users' do
   user = User.new(params[:user])
   if user.save
+    session[:user_id] = user.id
     erb :index
   else
     erb :sign_up
